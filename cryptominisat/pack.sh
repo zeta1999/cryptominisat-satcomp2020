@@ -14,3 +14,5 @@ cp "${1}" starexec_run_default
 )
 
 tar czvf "cmsat_${1}.tar.gz" ./*
+
+rm -f bin/starexec_run_default
