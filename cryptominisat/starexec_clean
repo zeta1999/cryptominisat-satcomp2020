@@ -3,6 +3,7 @@
 set -e
 set -x
 
+rm -f cmsat_*.tar.gz
 rm -rf bin/crypto*
 rm -rf cmake-3.11.1
 rm -rf m4ri-20200125

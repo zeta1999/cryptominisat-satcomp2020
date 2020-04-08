@@ -18,7 +18,6 @@ do
 rm -f "cmsat_${i}.tar.gz"
 cd cryptominisat
 ./pack.sh "${i}"
-mv "cmsat_${i}.tar.gz" ../
 )
 done
 
