@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+set -x
+
+rm -rf bin/crypto*
+rm -rf cmake-3.11.1
+rm -rf m4ri-release-20200125
+rm -rf cms/build
