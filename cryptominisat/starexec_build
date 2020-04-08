@@ -4,13 +4,12 @@ set -e
 set -x
 
 rm -rf bin/crypto*
-rm -rf bin/cusp*
 rm -rf myinstall
 
 gcc --version
 g++ --version
 
-rm -rf m4ri-release-20200125
+rm -rf cmake-3.11.1
 tar xzvf cmake-3.11.1.tar.gz
 cd cmake-3.11.1 || exit
 ./configure
@@ -30,8 +29,6 @@ cd ..
 rm -rf cms/build
 mkdir cms/build
 
-g++ --version
-gcc --version
 cd cms/build || exit
 ../../cmake-3.11.1/bin/cmake --version
 M4RI_ROOT_DIR=$(pwd)/../../m4ri-release-20200125/myinstall ../../cmake-3.11.1/bin/cmake -DENABLE_PYTHON_INTERFACE=OFF -DNOVALGRIND=ON -DNOZLIB=ON -DONLY_SIMPLE=ON -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF -DMANPAGE=OFF ..
