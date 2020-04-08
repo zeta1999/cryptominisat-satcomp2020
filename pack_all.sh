@@ -2,8 +2,7 @@
 set -e
 set -x
 
-rm -f *.zip
-rm -f cms55*.tar.gz
+rm -f cmsat_*.tar.gz
 declare -a arr=(
 "main_ccnr"
 "main_walksat"
