@@ -3,7 +3,7 @@
 set -e
 set -x
 
-rm -rf m4ri-release-20200125
+rm -rf m4ri-20200125
 rm -rf cmake-3.11.1
 rm -rf cms/build
 rm -f bin/crypto*
