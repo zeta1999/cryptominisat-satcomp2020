@@ -7,6 +7,7 @@ declare -a arr=(
 "main_ccnr"
 "main_walksat"
 "nolimits_ccnr"
+"nolimits_ccnr_gj"
 "nolimits_walksat"
 "parallel"
 )

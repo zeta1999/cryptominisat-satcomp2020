@@ -9,6 +9,13 @@ rm -rf cmake-3.11.1
 rm -rf cms/build
 rm -f bin/crypto*
 
+if [[ ${1} == *"gj"* ]]; then
+    cp starexec_build_gj starexec_build
+else
+    cp starexec_build_norm starexec_build
+fi
+
+
 (
 cd bin
 cp "${1}" starexec_run_default
@@ -18,3 +25,4 @@ tar czvf "cmsat_${1}.tar.gz" ./*
 mv "cmsat_${1}.tar.gz" ../
 
 rm -f bin/starexec_run_default
+rm -f starexec_build
