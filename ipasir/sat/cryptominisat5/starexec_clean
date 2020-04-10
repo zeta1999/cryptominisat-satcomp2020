@@ -6,5 +6,5 @@ set -x
 rm -rf cmake-3.11.1
 rm -rf m4ri-20200125
 rm -rf cms/build
-rm -rf abc abc2 xyz
+rm -rf abc abc2 abc3 abc4 abc5 abc6
 rm -f lib*.a

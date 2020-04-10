@@ -24,9 +24,7 @@ make install
 cd ..
 
 rm -rf cms/build
-rm -rf abc
-rm -rf abc2
-rm -rf xyz
+rm -rf abc abc2 abc3 abc4 abc5 abc6
 mkdir cms/build
 
 cd cms/build || exit
@@ -38,10 +36,14 @@ cd ../..
 # now create combined archive
 cp cms/build/lib/libipasircryptominisat5.a .
 cp cms/build/lib/libcryptominisat5.a .
-mkdir abc; cd abc; ar -x ../libipasircryptominisat5.a; cd ..
-mkdir abc2; cd abc2; ar -x ../libcryptominisat5.a; cd ..
-mkdir xyz; cd xyz; ar -x ../m4ri-20200125/.libs/libm4ri.a; cd ..
+mkdir abc;  cd abc;  ar -x ../libipasircryptominisat5.a; cd ..
+# mkdir abc2; cd abc2; ar -x ../libcryptominisat5.a; cd ..
+mkdir abc3; cd abc3; ar -x ../m4ri-20200125/.libs/libm4ri.a; cd ..
+# mkdir abc4; cd abc4; ar -x /usr/lib/libstdc++.a; cd ..
+# mkdir abc5; cd abc5; ar -x /usr/lib/libpthread.a; cd ..
+# mkdir abc7; cd abc7; ar -x /usr/lib/libc.a; cd ..
+# mkdir abc6; cd abc6; ar -x /usr/lib/libm.a; cd ..
 rm libipasircryptominisat5.a
 rm libcryptominisat5.a
-ar -qc libipasircryptominisat5.a abc/* abc2/* xyz/*
-rm -rf abc abc2 xyz
+ar -qc libipasircryptominisat5.a abc/* abc3/*
+rm -rf abc abc2 abc3 abc4 abc6 abc7

@@ -207,12 +207,15 @@ if (IPASIR)
 #     else ()
         add_library(ipasircryptominisat5
             ipasir.cpp
+            ${cryptoms_lib_files}
+            cryptominisat.cpp
         )
+#         set_target_properties(ipasircryptominisat5 PROPERTIES LINK_SEARCH_START_STATIC 1)
         target_link_libraries(ipasircryptominisat5
-            cryptominisat5
-            ${cryptoms_lib_link_libs}
-            ${CMAKE_THREAD_LIBS_INIT}
+            LINK_PUBLIC ${cryptoms_lib_link_libs}
+            LINK_PUBLIC ${CMAKE_THREAD_LIBS_INIT}
         )
+#         set_target_properties(ipasircryptominisat5 PROPERTIES LINK_SEARCH_END_STATIC 1)
         set_target_properties(ipasircryptominisat5 PROPERTIES
             OUTPUT_NAME ipasircryptominisat5
             PUBLIC_HEADER "${cryptominisat5_public_headers}"
