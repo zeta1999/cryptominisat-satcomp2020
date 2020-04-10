@@ -1,0 +1,22 @@
+=============
+From WalkSAT:
+
+makewff [-seed N] [-cnf] [-f] [-kf] clen nvars nclauses
+Generate random formulas using the fixed clause length model.
+The -seed argument can be used to initialize the random number
+generator.  The -cnf, -f, and -kf options specify the format of the
+wff file; for walksat use -cnf.  Clen is the length of each clause,
+nvars the number of variables, and nclauses the number of clauses.
+
+makequeens N
+Generate a N-queens formula.
+=============
+
+
+./makewff -seed 2121884153  -cnf 3 400 1700 > f400-r425-x000.cnf
+./multipart.py f400-r425-x000.cnf mizh-md5-47-3.cnf >out.cnf
+ac114f8666095c07186e8006fac75ec9cde75b84
+c Total time (this thread) : 1069.10
+s SATISFIABLE
+
+walksat f400-r425-x000.cnf -> 0.23s
