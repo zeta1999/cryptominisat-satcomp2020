@@ -12,11 +12,36 @@ makequeens N
 Generate a N-queens formula.
 =============
 
+at: ac114f8666095c07186e8006fac75ec9cde75b84
 
-./makewff -seed 2121884153  -cnf 3 400 1700 > f400-r425-x000.cnf
-./multipart.py f400-r425-x000.cnf mizh-md5-47-3.cnf >out.cnf
-ac114f8666095c07186e8006fac75ec9cde75b84
+./makewff -seed 2121884153  -cnf 3 400 1700 > f400.cnf
+./multipart.py f400.cnf mizh-md5-47-3.cnf >out.cnf
+CMS--
 c Total time (this thread) : 1069.10
 s SATISFIABLE
+walksat f400.cnf -> 0.23s
+ccnr -> same
 
-walksat f400-r425-x000.cnf -> 0.23s
+./grainofsalt --seed 0 --crypto crypto1 --outputs 50 --karnaugh 0 --init no --num 1
+/home/soos/development/grainofsalt/build/satfiles/crypto1-0-50-0-0xe9fc41c974630-1.cnf
+-> lingeling 164.2
+-> CMS 193.70
+
+out3.cnf
+-> CMS 180s
+-> maple chronobt 406.889
+
+out4.cnf
+-> CMS 925.92s
+-> cadical 930.81
+-> maple running
+
+out5.cnf
+-> CMS 146.03s
+-> cadical -- 324.20
+-> maple running
+
+out6.cnf
+-> CMS 150.32
+-> cadical 537.08
+-> maple running
