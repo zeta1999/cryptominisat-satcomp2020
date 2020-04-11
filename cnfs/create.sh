@@ -1,5 +1,29 @@
 #!/usr/bin/bash
 
+# Prerequisites
+#------
+# You need installed:
+#  python
+#  cadical: https://github.com/arminbiere/cadical
+#  ccanr: http://lcs.ios.ac.cn/~caisw/SAT.html
+#  grainofsalt: https://github.com/msoos/grainofsalt
+#     -- please install to directory ~/development/grainofsalt/
+#
+# The system uses makewff, as pert of the well-known WalksSAT package:
+#------
+# Generate random formulas using the fixed clause length model.
+# The -seed argument can be used to initialize the random number
+# generator.
+#
+#
+# The system uses grainofsalt with "crypto1"
+#------
+# This generates a random problem from the crypto1 stream cipher, with
+# preset number of outputs. When the number of outputs is low, it always
+# generates a satisfiable problem. Increasing the number of outputs
+# creates harder and harder problems
+
+
 set -x
 
 rm makewff

@@ -59,3 +59,5 @@ combined-crypto1-wff-seed-3-wffvars-450-cryptocplx-45.cnf
 -> cadical 555.27
 
 combined-crypto1-wff-seed-20-wffvars-450-cryptocplx-45.cnf
+-> cryptominisat 779.70
+-> cadical: 473.40
