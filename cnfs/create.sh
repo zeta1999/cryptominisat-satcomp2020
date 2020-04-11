@@ -2,7 +2,7 @@
 
 set -x
 
-rm make wff
+rm makewff
 gcc makewff.c -o makewff
 
 base=600
@@ -53,7 +53,8 @@ cp ~/development/grainofsalt/build/satfiles/$file .
 
 # ---------
 
-base=600
+base=450
+cryptocomplex=45
 echo "Doing $base"
 num=$(python -c "print('%d' % (4.25*${base}))")
 for i in {2..1000}
@@ -69,16 +70,21 @@ do
         echo "seed was: $i"
         break;
     fi
+    rm -f solution-$fnamesls
 done;
 (cd ~/development/grainofsalt/build/
 rm satfiles/*
 echo "Using seed: ${i}"
-./grainofsalt --seed ${i} --crypto crypto1 --outputs 50 --karnaugh 0 --init no --num 1 > out
+./grainofsalt --seed ${i} --crypto crypto1 --outputs $cryptocomplex --karnaugh 0 --init no --num 1 > out
 )
 fnamecdcl=$(grep "File output" ~/development/grainofsalt/build/out | awk '{print $3}')
-echo "crypto file was: $fnamecdcl"
-cadical $fnamecdcl > solution-$fnamecdcl
 cp ~/development/grainofsalt/build/satfiles/$fnamecdcl .
-./multipart.py $fnamecdcl $fnamesls > out4.cnf
+cadical $fnamecdcl > solution-$fnamecdcl
+echo "crypto file was: $fnamecdcl"
+echo "SLS    file was: $fnamesls"
+finalfile="combined-crypto1-wff-seed-$seed-wffvars-$base-cryptocomplex-$cryptocomplex.cnf"
+./multipart-match-sol.py $fnamecdcl $fnamesls solution-$fnamecdcl solution-$fnamesls > $finalfile
+echo "created $finalfile"
+lastseed=$i
 
 
