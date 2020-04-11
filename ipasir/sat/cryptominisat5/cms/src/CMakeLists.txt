@@ -205,30 +205,30 @@ if (IPASIR)
 #         )
 #         add_dependencies(ipasir_final ipasircryptominisat5_target)
 #     else ()
-        add_library(ipasircryptominisat5
-            ipasir.cpp
-            ${cryptoms_lib_files}
-            cryptominisat.cpp
-        )
+    add_library(ipasircryptominisat5
+        ipasir.cpp
+        ${cryptoms_lib_files}
+        cryptominisat.cpp
+    )
 #         set_target_properties(ipasircryptominisat5 PROPERTIES LINK_SEARCH_START_STATIC 1)
-        target_link_libraries(ipasircryptominisat5
-            LINK_PUBLIC ${cryptoms_lib_link_libs}
-            LINK_PUBLIC ${CMAKE_THREAD_LIBS_INIT}
-        )
+    target_link_libraries(ipasircryptominisat5
+        LINK_PUBLIC ${cryptoms_lib_link_libs}
+        LINK_PUBLIC ${CMAKE_THREAD_LIBS_INIT}
+    )
 #         set_target_properties(ipasircryptominisat5 PROPERTIES LINK_SEARCH_END_STATIC 1)
-        set_target_properties(ipasircryptominisat5 PROPERTIES
-            OUTPUT_NAME ipasircryptominisat5
-            PUBLIC_HEADER "${cryptominisat5_public_headers}"
-            VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-            SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        )
-        install(TARGETS ipasircryptominisat5
-            EXPORT ${CRYPTOMINISAT5_EXPORT_NAME}
-            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-            PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cryptominisat5"
-        )
+    set_target_properties(ipasircryptominisat5 PROPERTIES
+        OUTPUT_NAME ipasircryptominisat5
+        PUBLIC_HEADER "${cryptominisat5_public_headers}"
+        VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    )
+    install(TARGETS ipasircryptominisat5
+        EXPORT ${CRYPTOMINISAT5_EXPORT_NAME}
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/cryptominisat5"
+    )
 #     endif()
 
 endif()
