@@ -16,12 +16,69 @@
 # generator.
 #
 #
+#
 # The system uses grainofsalt with "crypto1"
 #------
 # This generates a random problem from the crypto1 stream cipher, with
 # preset number of outputs. When the number of outputs is low, it always
 # generates a satisfiable problem. Increasing the number of outputs
 # creates harder and harder problems
+#
+#
+#
+# The system uses multipart-match-sol.py
+#------
+# This is a hand-written tool that does the following. It takes 2 satisfiable
+# problems and their solutions, plus a parameter X:
+#
+# ./multipart-match-sol.py CNF1 CNF2 CNF1-solution CNF2-solution X
+#
+# It then ceates a new CNF as an output that is a combination of the two
+# but makes sure that X number of variables are re-used. These re-used
+# variables are always matching on the solutions provided. This ensures that
+# the output is SATISIFIABLE and that the 2 problems **cannot be cut apart**
+#
+#
+#
+# What the system does
+#------
+# Each run does the following. It generates 2 satisfiable problems. One from
+# makewff, which can be **trivally* solved within 2 seconds with an SLS
+# solver. And one from grainofsalt which can be **easily** solved with a
+# CDCL solver, within 40 seconds. The system then uses multipart-match-sol.py
+# to combine these two problems, such that exactly 5 variables are matched
+# making sure the problems **cannot** be cut into 2 pieces, but the final
+# CNF is satisfiable
+#
+#
+# The system tries to mimic real-world problems that are combination of two
+# easy problems, easy to solve separately by two separate types of systems.
+# However, the very mild combination of them, truly combined but not highly
+# overlapping (overlapping over 5 variables only) is HARD. In fact, it's hard
+# for all solvers that don't use a hybrid strategy such as first employed by
+# CaDiCaL and then by CryptoMiniSat. Hybrid strategies work, and this system
+# demonstrates that quite well.
+#
+#
+#
+# Historical background
+#------
+# Early attempts at hybrid solving, such as ReasonLS by Shaowei Cai and Xindi
+# Zhang combined SLS and CDCL solvers in shell-scripted, non-cohesive way.
+# However, it ignited a very interesting development, culminating in CaDiCaL
+# and CryptoMiniSat both having a hybrid SLS-CDCL strategy in SAT Race 2019.
+# This combined hybrid strategy has been proven useful in industrial
+# instances. This system effectively tests whether a hybrid strategy is
+# employed by the underlying solver.
+#
+# Note
+#------
+# The system COULD be solved with a non-hybrid system by somehow computing
+# a way to cut them into 2 pieces, solve independenty and then join back on
+# the 5 variables. However, such computation may be hard, and no solver
+# implements it. CryptoMiniSat used to have a setup where non-overlapping
+# CNFs can be cut away. Such CNFs have been regularly submitted to
+# SAT competitions
 
 
 set -x
