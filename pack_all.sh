@@ -9,7 +9,7 @@ declare -a arr=(
 "nolimits_ccnr"
 "nolimits_ccnr_gj"
 "nolimits_walksat"
-"parallel"
+"parallel_ccnr"
 )
 
 for i in "${arr[@]}"
