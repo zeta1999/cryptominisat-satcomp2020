@@ -45,3 +45,11 @@ out6.cnf
 -> CMS 150.32
 -> cadical 537.08
 -> maple running
+
+
+new setup
+---
+crypto complex 45
+base 450
+cadical 148.54
+CMS 36
