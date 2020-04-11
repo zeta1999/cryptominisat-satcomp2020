@@ -44,7 +44,10 @@ The system uses Grain of Salt~\cite{soos2010grain} to generate random problem fr
 
 
 \subsection{Multipart Combiner with Overlap}
-This is tool takes two satisfiable problems and their solutions, plus the parameter \texttt{OVERLAP}. It outputs a solution that is a combination of the two CNF's clauses, but the variables have been manipulated to be separate for both CNFs except for \texttt{OVERLAP} number of variables. These \texttt{OVERLAP} variables are specially picked from the solutions: the solutions provided must have the same setting for these variables. This ensures that the output is a satisfiable CNF and that the 2 problems cannot easily be cut apart. Used parameters: \texttt{"multipart-match-sol.py CNF1 CNF2 CNF1-solution CNF2-solution OVERLAP"}
+The multipart combiner is a tool that takes two satisfiable problems and their solutions, plus the parameter \texttt{OVERLAP}. It outputs a solution that is a combination of the two CNF's clauses, but the variable numbers have been shifted to be separate for both CNFs except for \texttt{OVERLAP} number of variables. These overlap variables are picked as the first \texttt{OVERLAP} variables that match on the provided solutions' polarities. This ensures that the output is a satisfiable CNF and that the two problems cannot easily be cut apart.
+
+\subsection{Putting it all together}
+The random problem is first generated with a particular seed, and a solution is found for it using CCAnr\cite{DBLP:conf/sat/CaiLS15}. Then a cryptographic problem is generated with a particular seed, and a solution is found for it using CaDiCaL\cite{biere2018cadical}. Finally, the two CNFs and the two solutions are given to the multipart combiner tool, with a particular overlap parameter. This produces the final, satisfiable CNF.
 
 
 \section{Historical background}
