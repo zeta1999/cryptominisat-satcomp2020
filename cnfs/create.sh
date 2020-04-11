@@ -98,11 +98,11 @@ rm makewff
 gcc makewff.c -o makewff
 
 
-base=420
+base=500
 cryptocomplex=31
 overlap=2
 
-lastseed=0
+lastseed=100
 for number_of_problems in {0..19};
 do
     echo "Doing $base"
