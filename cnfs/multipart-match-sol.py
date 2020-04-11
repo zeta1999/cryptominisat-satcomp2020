@@ -3,7 +3,7 @@ from __future__ import with_statement
 import sys
 import string
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print("You must use it as: CNF1 CNF2 CNF1-solution CNF2-solution MAX_NUM_MATCHED_VARS")
     exit(-1)
 
@@ -127,3 +127,5 @@ for f in sys.argv[1:3]:
             # end of this line in file
             print(towrite)
     at+=1
+
+exit(0)

@@ -53,3 +53,9 @@ crypto complex 45
 base 450
 cadical 148.54
 CMS 36
+
+combined-crypto1-wff-seed-3-wffvars-450-cryptocplx-45.cnf
+-> cryptominisat 184
+-> cadical 555.27
+
+combined-crypto1-wff-seed-20-wffvars-450-cryptocplx-45.cnf
