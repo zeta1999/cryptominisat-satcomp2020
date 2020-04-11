@@ -2,6 +2,9 @@
 
 set -x
 
+rm make wff
+gcc makewff.c -o makewff
+
 base=600
 echo "Doing $base"
 num=$(python -c "print('%d' % (4.25*${base}))")
@@ -11,9 +14,9 @@ ccanr -inst f$base.cnf
 (cd ~/development/grainofsalt/build/
 rm satfiles/*
 ./grainofsalt --seed 0 --crypto crypto1 --outputs 50 --karnaugh 0 --init no --num 1 > out
-file=$(grep "File output" out | awk '{print $3}')
-echo "crypto file was: $file"
 )
+file=$(grep "File output" ~/development/grainofsalt/build/out | awk '{print $3}')
+echo "crypto file was: $file"
 cp ~/development/grainofsalt/build/satfiles/$file .
 ./multipart.py $file f$base.cnf > out4.cnf
 
@@ -26,9 +29,9 @@ ccanr -inst f$base.cnf
 (cd ~/development/grainofsalt/build/
 rm satfiles/*
 ./grainofsalt --seed 1 --crypto crypto1 --outputs 50 --karnaugh 0 --init no --num 1 > out
-file=$(grep "File output" out | awk '{print $3}')
-echo "crypto file was: $file"
 )
+file=$(grep "File output" ~/development/grainofsalt/build/out | awk '{print $3}')
+echo "crypto file was: $file"
 cp ~/development/grainofsalt/build/satfiles/$file .
 ./multipart.py $file f$base.cnf > out5.cnf
 
@@ -41,8 +44,8 @@ ccanr -inst f$base.cnf
 (cd ~/development/grainofsalt/build/
 rm satfiles/*
 ./grainofsalt --seed 2 --crypto crypto1 --outputs 50 --karnaugh 0 --init no --num 1 > out
-file=$(grep "File output" out | awk '{print $3}')
-echo "crypto file was: $file"
 )
+file=$(grep "File output" ~/development/grainofsalt/build/out | awk '{print $3}')
+echo "crypto file was: $file"
 cp ~/development/grainofsalt/build/satfiles/$file .
 ./multipart.py $file f$base.cnf > out6.cnf
