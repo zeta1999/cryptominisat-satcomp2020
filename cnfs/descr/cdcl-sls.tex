@@ -37,10 +37,9 @@ The system tries to mimic real-world problems that are combinations of two easy 
 
 
 \subsection{Fixed Clause Length Model Random CNF Generator}
-
 As part of the well-known WalksSAT~\cite{Selman95localsearch} package, \texttt{makewff} generates random formulas using the fixed clause length model. See WalkSAT and its source code for details. Used parameters: \texttt{"makewff -seed SEED -cnf 3 NVARS (4.25*NVARS)"} where \texttt{NVARS} was varied between 300 and 500, and competition-matching values were picked out.
 
-\subsection{Grain of Salt}
+\subsection{Grain of Salt Structured Problem Generator}
 The system uses Grain of Salt~\cite{soos2010grain} to generate random problem from the CRYPTO-1 stream cipher, with preset number of outputs, a random IV and random key. When the number of \texttt{OUTPUTS} is low, it always generates a satisfiable problem. Increasing the number of \texttt{OUTPUTS} creates progressively harder problems which eventually become unsatisfiable. Used parameters: \texttt{"grainofsalt --seed SEED --crypto crypto1 --outputs OUTPUTS --karnaugh 0 --init no --num 1"} where \texttt{OUTPUTS} was set between 30 and 50, and competition-matching values were picked out.
 
 
