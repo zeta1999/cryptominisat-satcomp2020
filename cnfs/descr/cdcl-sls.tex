@@ -6,6 +6,10 @@
 \usepackage{fnbreak} %warn for split footnotes
 \usepackage{url}
 \usepackage[utf8]{inputenc} % allows to write Faugere correctly
+%\usepackage[showframe]{geometry}% http://ctan.org/pkg/geometry
+%\usepackage{lipsum}% http://ctan.org/pkg/lipsum
+%\usepackage{graphicx}% http://ctan.org/pkg/graphicx
+\usepackage{multicol}% http://ctan.org/pkg/multicols
 \usepackage[bookmarks=true, citecolor=black, linkcolor=black, colorlinks=true]{hyperref}
 \hypersetup{
 pdfauthor = {Mate Soos},
@@ -28,33 +32,88 @@ pdfkeywords = {SAT Solver, DPLL, SLS}}
 
 
 \section{Overview}
-System generates problems that are a combination of an easily satisfiable random problem and an easily satisfiable structured problem. It combines these two satisfiable problems in a way to make sure their solutions overlap on \texttt{OVERLAP} number of variables, where \texttt{OVERLAP} is at least 1. This makes sure the problems cannot easily be cut into two separate CNF files, but the final CNF is satisfiable.
+This paper showcases a system to generate problem instances that are a combination of an easily satisfiable random problem and an easily satisfiable structured problem. It combines these two satisfiable problems in a way that their sets of variables overlap on at least one variable that have matching polarities in their respective solutions. This ensures that the problems cannot easily be cut into two separate CNF files, while keeping the final CNF satisfiable.
 
-The system tries to mimic real-world problems that are combinations of two easy problems, easily solvable separately by two separate types of systems. However, the combination of them, truly combined but not highly overlapping is hard to solve.
+The system tries to mimic real-world problems that are combinations of two easy problems, easily solvable separately by two \emph{different} types of solving systems. However, the combination of them, truly combined but not highly overlapping, is hard to solve for non-hybrid solvers.
 
 
 \section{Components}
 
 
 \subsection{Fixed Clause Length Model Random CNF Generator}
-As part of the well-known WalksSAT~\cite{Selman95localsearch} package, \texttt{makewff} generates random formulas using the fixed clause length model. See WalkSAT and its source code for details. Used parameters: \texttt{"makewff -seed SEED -cnf 3 NVARS (4.25*NVARS)"} where \texttt{NVARS} was varied between 300 and 500, and competition-matching values were picked out.
+As part of the well-known WalksSAT~\cite{Selman95localsearch} package, \texttt{makewff} generates random formulas using the fixed clause length model. See WalkSAT and its source code for details. Parameters were set to generate 4.25 more clauses than the number of variables, each of length 3:  \texttt{"makewff -seed SEED -cnf 3 NVARS (4.25*NVARS)"}. The number of variables, \texttt{NVARS}, was varied between 300 and 500, and competition-matching values were picked out --- too easy and too hard were discarded.
 
 \subsection{Grain of Salt Structured Problem Generator}
-The system uses Grain of Salt~\cite{soos2010grain} to generate random problem from the CRYPTO-1 stream cipher, with preset number of outputs, a random IV and random key. When the number of \texttt{OUTPUTS} is low, it always generates a satisfiable problem. Increasing the number of \texttt{OUTPUTS} creates progressively harder problems which eventually become unsatisfiable. Used parameters: \texttt{"grainofsalt --seed SEED --crypto crypto1 --outputs OUTPUTS --karnaugh 0 --init no --num 1"} where \texttt{OUTPUTS} was set between 30 and 50, and competition-matching values were picked out.
+The system uses Grain of Salt~\cite{soos2010grain} to generate random problem from the CRYPTO-1 stream cipher~\cite{DBLP:conf/esorics/GarciaGMRVSJ08}, with preset number of outputs, a random IV and random key. When the number of \texttt{OUTPUTS} is low, it always generates a satisfiable problem. Increasing the number of \texttt{OUTPUTS} creates progressively harder problems which eventually become unsatisfiable. Parameters used were: \texttt{"grainofsalt --seed SEED --crypto crypto1 --outputs OUTPUTS --karnaugh 0 --init no --num 1"}. The \texttt{OUTPUTS} parameter was varied between 30 and 50, and competition-matching values were picked out  --- too easy and too hard were discarded.
 
 
 \subsection{Multipart Combiner with Overlap}
 The multipart combiner is a tool that takes two satisfiable problems and their solutions, plus the parameter \texttt{OVERLAP}. It outputs a solution that is a combination of the two CNF's clauses, but the variable numbers have been shifted to be separate for both CNFs except for \texttt{OVERLAP} number of variables. These overlap variables are picked as the first \texttt{OVERLAP} variables that match on the provided solutions' polarities. This ensures that the output is a satisfiable CNF and that the two problems cannot easily be cut apart.
 
 \subsection{Putting it all together}
-The random problem is first generated with a particular seed, and a solution is found for it using CCAnr\cite{DBLP:conf/sat/CaiLS15}. Then a cryptographic problem is generated with a particular seed, and a solution is found for it using CaDiCaL\cite{biere2018cadical}. Finally, the two CNFs and the two solutions are given to the multipart combiner tool, with a particular overlap parameter. This produces the final, satisfiable CNF.
+The random problem is first generated with a particular seed, and a solution is found for it using CCAnr\cite{DBLP:conf/sat/CaiLS15}. Then a cryptographic problem is generated with the same seed, and a solution is found for it using CaDiCaL\cite{biere2018cadical}. Finally, the two CNFs and the two solutions are given to the multipart combiner tool which produces the final, satisfiable combined CNF.
 
 
 \section{Historical background}
-Early attempts at hybrid solving, such as ReasonLS~\cite{shaoweixindi} combined SLS and CDCL solvers in shell-scripted, non-cohesive way, winning the 2018 SAT Competition's nolimits track. This ignited interesting developments, culminating in CaDiCaL~\cite{biere2018cadical} and CryptoMiniSat~\cite{CMS} both having a hybrid SLS-CDCL strategy in the SAT Race 2019. This combined hybrid strategy has been proven useful in industrial instances. The CNFs generated by our system effectively tests whether a hybrid strategy is employed by the underlying solver.
+SLS solvers have been shown to be useful for some structured instances, as demonstrated by ProbSAT~\cite{DBLP:conf/sat/BalintS12} and yalsat~\cite{DBLP:conf/sat/BalintBFS14}. Early attempts at hybrid solving, such as ReasonLS~\cite{shaoweixindi} combined SLS and CDCL solvers in shell-scripted, non-cohesive way, nevertheless winning the 2018 SAT Competition's NoLimits track. This ignited interesting developments, culminating in CaDiCaL~\cite{biere2018cadical} and CryptoMiniSat~\cite{CMS} both having a hybrid SLS-CDCL strategy in the SAT Race 2019. This combined hybrid strategy has been proven useful for industrial instances. The CNFs generated by the system can be best solved by solvers utilizing such a hybrid strategy.
 
 \section{Rationale}
 These CNFs were mostly created to encourage hybrid solvers such as SLS+CDCL, Gauss-Jordan elimination+CDCL, Groebner Basis+CDCL, etc. Note that with linearization, Gauss-Jordan elimination is capable of solving non-linear problems as well, and is therefore not restricted to XOR constraints. These hybrid systems could potentially prove very useful for the SAT community in the long run.
+
+\section{Parameters for the Problem Instances Generated}
+The problem instances problems fall into two categories, both of which have \texttt{OVERLAP} set to 2.
+
+
+The first bunch contain 500 variables (and correspondingly, $4.25*500=22125$ clauses, each of length 3) for \cite{makewff} and have 31 outputs given for the CRYPTO-1 algorithm. This can be considered moderately complex on the SLS domain and moderately simple on the CDCL domain.
+
+The second bunch contain 450 variables (and correspondingly, $4.25*500=19912$ clauses, each of length 3) for \cite{makewff} and have 40 outputs given for the CRYPTO-1 algorithm. This can be considered moderately simple on the SLS domain and moderately complex on the CDCL domain. 
+
+%Note that a modern SLS solvers such as CCAnr~\cite{DBLP:conf/sat/CaiLS15} cannot solve these problems on their own.
+%nor any modern version of MiniSat~\cite{DBLP:conf/sat/EenS03} (e.g. MapleLCMDistChronoBT~\cite{chronobt}) can solve these instances. Hence they are hard for both pure SLS and pure CDCL solvers. However, both CaDiCaL and other hybrid solvers can solve them, as required by the competition guidelines.
+
+
+\section{List of Problem Instances Generated}
+{
+\noindent
+\small
+\texttt{crypto1-wff-seed-1-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-12-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-15-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-16-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-18-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-19-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-21-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-22-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-24-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-25-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-26-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-28-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-3-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-32-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-4-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-5-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-8-wffvars-450-cryptocplx-40-overlap-2.cnf}
+\texttt{crypto1-wff-seed-101-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-102-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-104-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-105-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-106-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-107-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-108-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-109-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-110-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-115-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-116-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-121-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-127-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-129-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-132-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-133-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-134-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-136-wffvars-500-cryptocplx-31-overlap-2.cnf}
+\texttt{crypto1-wff-seed-138-wffvars-500-cryptocplx-31-overlap-2.cnf}
+
+
 
 \bibliographystyle{splncs03}
 \bibliography{sigproc}
