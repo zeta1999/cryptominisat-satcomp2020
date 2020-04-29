@@ -13,9 +13,10 @@ gcc --version
 g++ --version
 
 # build cmake
-rm -rf cmake-3.11.1
-tar xzvf cmake-3.11.1.tar.gz
-cd cmake-3.11.1 || exit
+# cmake-3.12.0.tar.g
+rm -rf cmake-3.12.0
+tar xzvf cmake-3.12.0.tar.gz
+cd cmake-3.12.0 || exit
 ./configure
 make -j4 || exit
 cd ..
@@ -32,13 +33,13 @@ make install
 cd ..
 
 #check cmake
-./cmake-3.11.1/bin/cmake --version
+./cmake-3.12.0/bin/cmake --version
 
 # build breakid
 rm -rf breakid/build
 mkdir -p breakid/build
 cd breakid/build || exit
-../../cmake-3.11.1/bin/cmake -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release ..
+../../cmake-3.12.0/bin/cmake -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release ..
 make -j4 VERBOSE=1 || exit
 cd ../..
 
@@ -47,7 +48,7 @@ cd ../..
 rm -rf cms/build
 mkdir cms/build
 cd cms/build || exit
-M4RI_ROOT_DIR=$(pwd)/../../m4ri-20200125/myinstall ../../cmake-3.11.1/bin/cmake -DENABLE_PYTHON_INTERFACE=OFF -DNOVALGRIND=ON -DNOZLIB=ON -DONLY_SIMPLE=ON -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF -DMANPAGE=OFF ..
+M4RI_ROOT_DIR=$(pwd)/../../m4ri-20200125/myinstall ../../cmake-3.12.0/bin/cmake -DENABLE_PYTHON_INTERFACE=OFF -DNOVALGRIND=ON -DNOZLIB=ON -DONLY_SIMPLE=ON -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF -DMANPAGE=OFF ..
 make -j4 VERBOSE=1
 cp cryptominisat5_simple ../../bin/
 ldd ./cryptominisat5_simple || true
