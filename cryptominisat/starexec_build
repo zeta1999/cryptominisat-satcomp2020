@@ -3,6 +3,9 @@
 set -e
 set -x
 
+echo "Current dir:"
+pwd
+
 rm -rf bin/crypto*
 rm -rf myinstall
 
@@ -14,7 +17,7 @@ rm -rf cmake-3.11.1
 tar xzvf cmake-3.11.1.tar.gz
 cd cmake-3.11.1 || exit
 ./configure
-make -j4
+make -j4 || exit
 cd ..
 
 # build m4ri
@@ -24,19 +27,19 @@ cd m4ri-20200125 || exit
 rm -rf myinstall
 mkdir -p myinstall
 ./configure --prefix=$(pwd)/myinstall
-make -j4 VERBOSE=1
+make -j4 VERBOSE=1 || exit
 make install
 cd ..
 
 #check cmake
-../../cmake-3.11.1/bin/cmake --version
+./cmake-3.11.1/bin/cmake --version
 
 # build breakid
 rm -rf breakid/build
-mkdir breakid/build
+mkdir -p breakid/build
 cd breakid/build || exit
 ../../cmake-3.11.1/bin/cmake -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release ..
-make -j4 VERBOSE=1
+make -j4 VERBOSE=1 || exit
 cd ../..
 
 

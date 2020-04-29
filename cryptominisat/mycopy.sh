@@ -16,3 +16,5 @@ cp -r ~/development/sat_solvers/breakid/src/* breakid/src/
 cp ~/development/sat_solvers/breakid/CMakeLists.txt breakid/
 cp ~/development/sat_solvers/breakid/breakidConfig.cmake.in breakid/
 cp -r ~/development/sat_solvers/breakid/cmake breakid/
+
+rm -rf bliss
