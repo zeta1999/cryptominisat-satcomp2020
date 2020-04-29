@@ -5,9 +5,10 @@ set -x
 rm -f cmsat_*.tar.gz
 declare -a arr=(
 "main_ccnr"
+"main_ccnr_lsids"
 "main_walksat"
 "nolimits_ccnr"
-"nolimits_ccnr_gj"
+"nolimits_ccnr_lsids"
 "nolimits_walksat"
 "parallel_ccnr"
 )
