@@ -57,6 +57,10 @@ public:
     uint64_t  decisionsRand = 0;
     uint64_t  decisionFlippedPolar = 0;
 
+    //LSIDS related data
+    uint64_t  chrono_decisions = 0;
+    uint64_t  lsids_opp_cached = 0;
+
     //Clause shrinking
     uint64_t litsRedNonMin = 0;
     uint64_t litsRedFinal = 0;
@@ -68,11 +72,7 @@ public:
 
     uint64_t furtherShrinkAttempt = 0;
     uint64_t binTriShrinkedClause = 0;
-    uint64_t cacheShrinkedClause = 0;
     uint64_t furtherShrinkedSuccess = 0;
-    uint64_t stampShrinkAttempt = 0;
-    uint64_t stampShrinkCl = 0;
-    uint64_t stampShrinkLit = 0;
     uint64_t moreMinimLitsStart = 0;
     uint64_t moreMinimLitsEnd = 0;
     uint64_t recMinimCost = 0;
@@ -81,7 +81,11 @@ public:
     uint64_t learntUnits = 0;
     uint64_t learntBins = 0;
     uint64_t learntLongs = 0;
-    uint64_t cache_hit = 0;
+    uint64_t otfSubsumed = 0;
+    uint64_t otfSubsumedImplicit = 0;
+    uint64_t otfSubsumedLong = 0;
+    uint64_t otfSubsumedRed = 0;
+    uint64_t otfSubsumedLitsGained = 0;
     uint64_t red_cl_in_which0 = 0;
 
     //Hyper-bin & transitive reduction
@@ -90,11 +94,9 @@ public:
     uint64_t transReduRemIrred = 0;
     uint64_t transReduRemRed = 0;
 
-    //SolveFeatures
+    //SatZillaFeatures
     uint64_t num_xors_found_last = 0;
     uint64_t num_gates_found_last = 0;
-    uint64_t clauseID_at_start_inclusive = 0;
-    uint64_t clauseID_at_end_exclusive = 0;
 
     //Resolution Stats
     AtecedentData<uint64_t> resolvs;

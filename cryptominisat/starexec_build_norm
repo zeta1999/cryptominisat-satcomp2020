@@ -9,6 +9,7 @@ rm -rf myinstall
 gcc --version
 g++ --version
 
+# build cmake
 rm -rf cmake-3.11.1
 tar xzvf cmake-3.11.1.tar.gz
 cd cmake-3.11.1 || exit
@@ -16,6 +17,7 @@ cd cmake-3.11.1 || exit
 make -j4
 cd ..
 
+# build m4ri
 rm -rf m4ri-20200125
 tar xzvf m4ri-20200125.tar.gz
 cd m4ri-20200125 || exit
@@ -26,11 +28,22 @@ make -j4 VERBOSE=1
 make install
 cd ..
 
+#check cmake
+../../cmake-3.11.1/bin/cmake --version
+
+# build breakid
+rm -rf breakid/build
+mkdir breakid/build
+cd breakid/build || exit
+../../cmake-3.11.1/bin/cmake -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release ..
+make -j4 VERBOSE=1
+cd ../..
+
+
+# build cms
 rm -rf cms/build
 mkdir cms/build
-
 cd cms/build || exit
-../../cmake-3.11.1/bin/cmake --version
 M4RI_ROOT_DIR=$(pwd)/../../m4ri-20200125/myinstall ../../cmake-3.11.1/bin/cmake -DENABLE_PYTHON_INTERFACE=OFF -DNOVALGRIND=ON -DNOZLIB=ON -DONLY_SIMPLE=ON -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF -DMANPAGE=OFF ..
 make -j4 VERBOSE=1
 cp cryptominisat5_simple ../../bin/
@@ -38,3 +51,4 @@ ldd ./cryptominisat5_simple || true
 echo "1 0" | ./cryptominisat5_simple || true
 echo "1 0" | ./cryptominisat5_simple --sls=ccnr || true
 echo "1 0" | ./cryptominisat5_simple --sls=walksat || true
+cd ../..
