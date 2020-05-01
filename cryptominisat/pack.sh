@@ -18,4 +18,3 @@ tar czvf "cmsat_${1}.tar.gz" ./*
 mv "cmsat_${1}.tar.gz" ../
 
 rm -f bin/starexec_run_default
-rm -f starexec_build
