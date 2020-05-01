@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -e
+set -x
+
+echo "Current dir:"
+pwd
+
+rm -rf bin/crypto*
+rm -rf myinstall
+
+gcc --version
+g++ --version
+
+# build cmake
+# cmake-3.12.0.tar.gz
+rm -rf cmake-3.12.0
+tar xzvf cmake-3.12.0.tar.gz
+cd cmake-3.12.0 || exit
+./configure
+make -j4 || exit
+cd ..
+
+# build m4ri
+rm -rf m4ri-20200125
+tar xzvf m4ri-20200125.tar.gz
+cd m4ri-20200125 || exit
+rm -rf myinstall
+mkdir -p myinstall
+./configure --prefix=$(pwd)/myinstall
+make -j4 VERBOSE=1 || exit
+make install
+cd ..
+
+#check cmake
+./cmake-3.12.0/bin/cmake --version
+
+# build breakid
+rm -rf breakid/build
+mkdir -p breakid/build
+cd breakid/build || exit
+../../cmake-3.12.0/bin/cmake -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release ..
+make -j4 VERBOSE=1 || exit
+cd ../..
+
+
+# build cms
+rm -rf abc abc2 abc3 abc4 abc5 abc6
+rm -rf cms/build
+mkdir cms/build
+cd cms/build || exit
+M4RI_ROOT_DIR=$(pwd)/../../m4ri-20200125/myinstall ../../cmake-3.12.0/bin/cmake -DENABLE_PYTHON_INTERFACE=OFF -DNOVALGRIND=ON -DNOZLIB=ON -DONLY_SIMPLE=ON -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF -DIPASIR=ON -DMANPAGE=OFF ..
+make -j4 VERBOSE=1
+cp cryptominisat5_simple ../../bin/
+strip ./cryptominisat5_simple
+
+# now create combined archive
+cp cms/build/lib/libipasircryptominisat5.a .
+cp cms/build/lib/libcryptominisat5.a .
+mkdir abc;  cd abc;  ar -x ../libipasircryptominisat5.a; cd ..
+mkdir abc3; cd abc3; ar -x ../m4ri-20200125/.libs/libm4ri.a; cd ..
+mkdir abc4; cd abc4; ar -x ../breakid/build/lib/libbreakid.a; cd ..
+# mkdir abc5; cd abc5; ar -x /usr/lib/libpthread.a; cd ..
+# mkdir abc7; cd abc7; ar -x /usr/lib/libc.a; cd ..
+# mkdir abc6; cd abc6; ar -x /usr/lib/libm.a; cd ..
+rm libipasircryptominisat5.a
+rm libcryptominisat5.a
+ar -qc libipasircryptominisat5.a abc/* abc3/* abc4/*
+rm -rf abc abc2 abc3 abc4 abc6 abc7

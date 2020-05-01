@@ -1,5 +1,5 @@
 all:
-	./starexec_build_norm
+	./starexec_build
 
 clean:
 	./starexec_clean
