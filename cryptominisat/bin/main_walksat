@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./cryptominisat5_simple $1 --verb=0 --sls=walksat --drat=$2/proof.out
+./cryptominisat5_simple --verb=0 --sls=walksat --drat=$2/proof.out $1

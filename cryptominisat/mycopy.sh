@@ -8,6 +8,7 @@ cp -r ~/development/sat_solvers/cryptominisat/cmake cms/
 rm -rf cms/src/predict/
 cp -r ~/development/sat_solvers/cryptominisat/CMakeLists.txt cms/
 cp -r ~/development/sat_solvers/cryptominisat/cryptominisat5Config.cmake.in cms/
+rm cms/src/cl_predictors.*
 
 rm -rf breakid
 mkdir breakid
