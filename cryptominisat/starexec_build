@@ -13,7 +13,7 @@ gcc --version
 g++ --version
 
 # build cmake
-# cmake-3.12.0.tar.g
+# cmake-3.12.0.tar.gz
 rm -rf cmake-3.12.0
 tar xzvf cmake-3.12.0.tar.gz
 cd cmake-3.12.0 || exit
@@ -52,6 +52,7 @@ M4RI_ROOT_DIR=$(pwd)/../../m4ri-20200125/myinstall ../../cmake-3.12.0/bin/cmake 
 make -j4 VERBOSE=1
 cp cryptominisat5_simple ../../bin/
 ldd ./cryptominisat5_simple || true
+strip ./cryptominisat5_simple
 echo "1 0" | ./cryptominisat5_simple || true
 echo "1 0" | ./cryptominisat5_simple --sls=ccnr || true
 echo "1 0" | ./cryptominisat5_simple --sls=walksat || true
