@@ -51,12 +51,10 @@ mkdir cms/build
 cd cms/build || exit
 M4RI_ROOT_DIR=$(pwd)/../../m4ri-20200125/myinstall ../../cmake-3.12.0/bin/cmake -DENABLE_PYTHON_INTERFACE=OFF -DNOVALGRIND=ON -DNOZLIB=ON -DONLY_SIMPLE=ON -DSTATICCOMPILE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF -DIPASIR=ON -DMANPAGE=OFF ..
 make -j4 VERBOSE=1
-cp cryptominisat5_simple ../../bin/
-strip ./cryptominisat5_simple
+cd ../..
 
 # now create combined archive
 cp cms/build/lib/libipasircryptominisat5.a .
-cp cms/build/lib/libcryptominisat5.a .
 mkdir abc;  cd abc;  ar -x ../libipasircryptominisat5.a; cd ..
 mkdir abc3; cd abc3; ar -x ../m4ri-20200125/.libs/libm4ri.a; cd ..
 mkdir abc4; cd abc4; ar -x ../breakid/build/lib/libbreakid.a; cd ..
@@ -64,6 +62,5 @@ mkdir abc4; cd abc4; ar -x ../breakid/build/lib/libbreakid.a; cd ..
 # mkdir abc7; cd abc7; ar -x /usr/lib/libc.a; cd ..
 # mkdir abc6; cd abc6; ar -x /usr/lib/libm.a; cd ..
 rm libipasircryptominisat5.a
-rm libcryptominisat5.a
 ar -qc libipasircryptominisat5.a abc/* abc3/* abc4/*
 rm -rf abc abc2 abc3 abc4 abc6 abc7
