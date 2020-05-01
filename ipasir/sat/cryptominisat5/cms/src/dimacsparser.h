@@ -39,19 +39,24 @@ class DimacsParser
     public:
         DimacsParser(SATSolver* solver, const std::string* debugLib, unsigned _verbosity);
 
-        template <class T> bool parse_DIMACS(T input_stream, const bool strict_header);
+        template <class T> bool parse_DIMACS(
+            T input_stream,
+            const bool strict_header,
+            uint32_t offset_vars = 0);
         uint64_t max_var = std::numeric_limits<uint64_t>::max();
         vector<uint32_t> sampling_vars;
+        vector<double> weights;
         const std::string dimacs_spec = "http://www.satcompetition.org/2009/format-benchmarks2009.html";
         const std::string please_read_dimacs = "\nPlease read DIMACS specification at http://www.satcompetition.org/2009/format-benchmarks2009.html";
 
     private:
         bool parse_DIMACS_main(C& in);
         bool readClause(C& in);
+        bool parseWeight(C& in);
         bool parse_and_add_clause(C& in);
         bool parse_and_add_xor_clause(C& in);
         bool match(C& in, const char* str);
-        bool printHeader(C& in);
+        bool parse_header(C& in);
         bool parseComments(C& in, const std::string& str);
         std::string stringify(uint32_t x) const;
         bool parse_solve_simp_comment(C& in, const bool solve);
@@ -75,6 +80,7 @@ class DimacsParser
         bool header_found = false;
         int num_header_vars = 0;
         int num_header_cls = 0;
+        uint32_t offset_vars = 0;
 
         //Reduce temp overhead
         vector<Lit> lits;
@@ -133,6 +139,7 @@ bool DimacsParser<C>::readClause(C& in)
         }
 
         var = std::abs(parsed_lit)-1;
+        var += offset_vars;
 
         if (var > max_var) {
             std::cerr
@@ -204,7 +211,41 @@ bool DimacsParser<C>::match(C& in, const char* str)
 }
 
 template<class C>
-bool DimacsParser<C>::printHeader(C& in)
+bool DimacsParser<C>::parseWeight(C& in)
+{
+    if (match(in, "w ")) {
+        int32_t slit;
+        double weight;
+        if (in.parseInt(slit, lineNum)
+            && in.parseDouble(weight, lineNum)
+        ) {
+            if (slit == 0) {
+                cout << "ERROR: Cannot define weight of literal 0!" << endl;
+                exit(-1);
+            }
+            uint32_t var = std::abs(slit)-1;
+            bool sign = slit < 0;
+            Lit lit = Lit(var, sign);
+            solver->set_var_weight(lit, weight);
+            //cout << "lit: " << lit << " weight: " << std::setprecision(12) << weight << endl;
+            if (weight < 0) {
+                cout << "ERROR: while definint weight, variable " << var+1 << " has is negative weight: " << weight << " -- line " << lineNum << endl;
+                exit(-1);
+            }
+            return true;
+        } else {
+            cout << "ERROR: weight is incorrect on line " << lineNum << endl;
+            exit(-1);
+        }
+    } else {
+        cout << "ERROR: weight is not given on line " << lineNum << endl;
+        exit(-1);
+    }
+    return true;
+}
+
+template<class C>
+bool DimacsParser<C>::parse_header(C& in)
 {
     if (match(in, "p cnf")) {
         if (header_found && strict_header) {
@@ -230,6 +271,7 @@ bool DimacsParser<C>::printHeader(C& in)
             std::cerr << "ERROR: Number of clauses in header cannot be less than 0" << endl;
             return false;
         }
+        num_header_vars += offset_vars;
 
         if (solver->nVars() < (size_t)num_header_vars) {
             solver->new_vars(num_header_vars-solver->nVars());
@@ -446,14 +488,20 @@ bool DimacsParser<C>::parse_DIMACS_main(C& in)
         case EOF:
             return true;
         case 'p':
-            if (!printHeader(in)) {
+            if (!parse_header(in)) {
+                return false;
+            }
+            in.skipLine();
+            lineNum++;
+            break;
+        case 'w':
+            if (!parseWeight(in)) {
                 return false;
             }
             in.skipLine();
             lineNum++;
             break;
         case 'c':
-        case 'w':
             ++in;
             in.parseString(str);
             if (!parseComments(in, str)) {
@@ -488,10 +536,14 @@ bool DimacsParser<C>::parse_DIMACS_main(C& in)
 
 template <class C>
 template <class T>
-bool DimacsParser<C>::parse_DIMACS(T input_stream, const bool _strict_header)
+bool DimacsParser<C>::parse_DIMACS(
+    T input_stream,
+    const bool _strict_header,
+    uint32_t _offset_vars)
 {
     debugLibPart = 1;
     strict_header = _strict_header;
+    offset_vars = _offset_vars;
     const uint32_t origNumVars = solver->nVars();
 
     C in(input_stream);

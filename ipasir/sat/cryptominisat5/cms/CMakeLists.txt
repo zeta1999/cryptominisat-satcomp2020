@@ -24,6 +24,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 include (GenerateExportHeader)
 include (GNUInstallDirs)
+enable_language( CXX )
 
 message(STATUS "LIB directory is '${CMAKE_INSTALL_LIBDIR}'")
 message(STATUS "BIN directory is '${CMAKE_INSTALL_BINDIR}'")
@@ -186,7 +187,7 @@ if (SANITIZE)
 endif()
 endmacro()
 
-option(USE_GAUSS "Build with every-level GAUSS enabled" OFF)
+option(USE_GAUSS "Build with every-level GAUSS enabled" ON)
 if (USE_GAUSS)
     add_definitions(-DUSE_GAUSS)
     message(STATUS "Building with GAUSS enabled at every level")
@@ -300,6 +301,7 @@ option(ENABLE_TESTING "Enable testing" OFF)
 option(COVERAGE "Build with coverage check" OFF)
 if (STATICCOMPILE)
     set(ENABLE_TESTING OFF)
+    set(Boost_USE_STATIC_LIBS ON)
 endif()
 
 if (COVERAGE AND BUILD_SHARED_LIBS)
@@ -336,6 +338,10 @@ if (NOT WIN32)
         add_cxx_flag_if_supported("-Winit-self")
         add_cxx_flag_if_supported("-Wparentheses")
         add_cxx_flag_if_supported("-Wunreachable-code")
+        add_cxx_flag_if_supported("-g")
+        add_cxx_flag_if_supported("-Wno-class-memaccess")
+        add_cxx_flag_if_supported("-mpopcnt")
+        add_cxx_flag_if_supported("-msse4.2")
         add_cxx_flag_if_supported("-Wextra-semi-stmt")
         add_cxx_flag_if_supported("-Wweak-vtables")
         add_cxx_flag_if_supported("-ggdb3")
@@ -437,19 +443,36 @@ if (NOT ONLY_SIMPLE)
     find_package( Boost 1.46 COMPONENTS program_options)
 endif()
 
+option(FINAL_PREDICTOR "Use final predictor" OFF)
+option(FINAL_PREDICTOR_BRANCH "Use final predictor" OFF)
+if (FINAL_PREDICTOR)
+    find_package(xgboost REQUIRED)
+    add_definitions( -DFINAL_PREDICTOR )
+endif()
+
+if (FINAL_PREDICTOR_BRANCH)
+    add_definitions( -DFINAL_PREDICTOR_BRANCH )
+endif()
+
+if (NOT NOSQLITE)
+    find_package (Sqlite3)
+    IF (SQLITE3_FOUND)
+        MESSAGE(STATUS "OK, Found Sqlite3!")
+        include_directories(${SQLITE3_INCLUDE_DIR})
+        add_definitions( -DUSE_SQLITE3 )
+    else ()
+        MESSAGE(STATUS "WARNING: Did not find Sqlite3, Sqlite3 support will be disabled")
+    endif ()
+endif()
+
 option(STATS "Don't use statistics at all" OFF)
 if (STATS)
+    if (FINAL_PREDICTOR)
+        message(FATAL_ERROR "Cannot have stats and final predictor on both")
+    endif()
     add_definitions( -DSTATS_NEEDED )
-    if (NOT NOSQLITE)
-        find_package (Sqlite3)
-        IF (SQLITE3_FOUND)
-            MESSAGE(STATUS "OK, Found Sqlite3!")
-            include_directories(${SQLITE3_INCLUDE_DIR})
-            add_definitions( -DUSE_SQLITE3 )
-            set(USING_SQLITE ON)
-        else ()
-            MESSAGE(STATUS "WARNING: Did not find Sqlite3, Sqlite3 support will be disabled")
-        endif ()
+    if (NOT SQLITE3_FOUND)
+        message(FATAL_ERROR "SQLite needed for STATS")
     endif()
 ELSE ()
     MESSAGE(STATUS "Not compiling detailed statistics. The system is faster without them")
@@ -546,8 +569,14 @@ if (HAVE__FPU_SETCW)
 endif()
 
 
+option(WEIGHTED_SAMPLING "Allow for weighted sampling" OFF)
+if (WEIGHTED_SAMPLING)
+    add_definitions( -DWEIGHTED_SAMPLING )
+endif()
+
+
 # -----------------------------------------------------------------------------
-# Look for M4RI (for Gauss)
+# MIT option
 # -----------------------------------------------------------------------------
 option(REQUIRE_M4RI "Must use m4ri" OFF)
 option(NOM4RI "Don't use m4ri" OFF)
@@ -565,22 +594,9 @@ if (MIT)
     endif()
 endif()
 
-if (NOT NOBOSPHORUS)
-    find_package(bosphorus)
-    if (NOT BOSPHORUS_LIBRARIES)
-        if (REQUIRE_BOSPHORUS)
-            message(FATAL_ERROR "Bosphorus NOT found, but it was required with REQUIRE_BOSPHORUS")
-        else()
-            message(WARNING "Bosphorus NOT found")
-        endif()
-    else()
-        message(STATUS "Bosphorus -- found version ${BOSPHORUS_VERSION_MAJOR}.${BOSPHORUS_VERSION_MINOR}")
-        message(STATUS "Bosphorus -- libraries: ${BOSPHORUS_LIBRARIES}")
-        message(STATUS "Bosphorus -- include dirs: ${BOSPHORUS_INCLUDE_DIRS}")
-    endif()
-endif()
-
-
+# -----------------------------------------------------------------------------
+# Look for M4RI (for Gauss)
+# -----------------------------------------------------------------------------
 if (NOT NOM4RI)
     find_package(M4RI)
     IF (M4RI_FOUND)
@@ -594,14 +610,40 @@ if (NOT NOM4RI)
     ENDIF (M4RI_FOUND)
 endif()
 
-#query definitions
-get_directory_property( DirDefs DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS )
-set(COMPILE_DEFINES)
-foreach( d ${DirDefs} )
-    # message( STATUS "Found Define: " ${d} )
-    set(COMPILE_DEFINES "${COMPILE_DEFINES} -D${d}")
-endforeach()
-message(STATUS "All defines at startup: ${COMPILE_DEFINES}")
+# -----------------------------------------------------------------------------
+# Look for Boshphorus
+# -----------------------------------------------------------------------------
+if (NOT NOBOSPHORUS)
+    find_package(bosphorus)
+    if (NOT BOSPHORUS_LIBRARIES)
+        if (REQUIRE_BOSPHORUS)
+            message(FATAL_ERROR "Bosphorus NOT found, but it was required with REQUIRE_BOSPHORUS")
+        else()
+            message(WARNING "Bosphorus NOT found")
+        endif()
+    else()
+        message(STATUS "Bosphorus -- found version ${BOSPHORUS_VERSION_MAJOR}.${BOSPHORUS_VERSION_MINOR}")
+        message(STATUS "Bosphorus -- libraries: ${BOSPHORUS_LIBRARIES}")
+        message(STATUS "Bosphorus -- include dirs: ${BOSPHORUS_INCLUDE_DIRS}")
+        add_definitions( -DUSE_BOSPHORUS)
+    endif()
+endif()
+
+# -----------------------------------------------------------------------------
+# Look for BreakID
+# -----------------------------------------------------------------------------
+option(NOBREAKID "Disable BreakID" OFF)
+if (NOT NOBREAKID)
+    find_package(breakid)
+    if (NOT BREAKID_LIBRARIES)
+        message(WARNING "BreakID NOT found")
+    else()
+        message(STATUS "BreakID -- found version ${BREAKID_VERSION_MAJOR}.${BREAKID_VERSION_MINOR}")
+        message(STATUS "BreakID -- libraries: ${BREAKID_LIBRARIES}")
+        message(STATUS "BreakID -- include dirs: ${BREAKID_INCLUDE_DIRS}")
+        add_definitions(-DUSE_BREAKID)
+    endif()
+endif()
 
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
@@ -621,6 +663,19 @@ macro(cmsat_add_public_header LIBTARGET HEADER)
         PUBLIC_HEADER "${EXISTING_PUBLIC_HEADERS}"
      )
 endmacro()
+
+
+# -----------------------------------------------------------------------------
+# Look for MPI
+# -----------------------------------------------------------------------------
+find_package(MPI)
+if (MPI_FOUND)
+    add_definitions( -DUSE_MPI )
+    include_directories(${MPI_INCLUDE_PATH})
+    #set( CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER} )
+else (MPI_FOUND)
+     MESSAGE(STATUS "No suitable C++ MPI implementation found. CryptoMiniSat will not be distributed.")
+endif(MPI_FOUND)
 
 # -----------------------------------------------------------------------------
 # Look for python
@@ -693,7 +748,21 @@ endif()
 # -----------------------------------------------------------------------------
 set(CRYPTOMINISAT5_EXPORT_NAME "cryptominisat5Targets")
 
+#query definitions
+get_directory_property( DirDefs DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS )
+set(COMPILE_DEFINES)
+foreach( d ${DirDefs} )
+    # message( STATUS "Found Define: " ${d} )
+    set(COMPILE_DEFINES "${COMPILE_DEFINES} -D${d}")
+endforeach()
+message(STATUS "All defines at startup: ${COMPILE_DEFINES}")
+
 add_subdirectory(src cmsat5-src)
+if(EXISTS "${PROJECT_SOURCE_DIR}/utils/drat-trim/drat-trim.c")
+    add_subdirectory(${PROJECT_SOURCE_DIR}/utils/drat-trim utils/drat-trim)
+else()
+    message(STATUS "GIT Subprojects not initialized, not building drat-trim")
+endif()
 
 # -----------------------------------------------------------------------------
 # Add uninstall target for makefiles

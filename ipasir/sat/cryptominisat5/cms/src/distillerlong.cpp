@@ -33,8 +33,6 @@ using namespace CMSat;
 using std::cout;
 using std::endl;
 
-//#define DEBUG_STAMPING
-
 #ifdef VERBOSE_DEBUG
 #define VERBOSE_SUBSUME_NONEXIST
 #endif
@@ -141,7 +139,15 @@ bool DistillerLong::go_through_clauses(
         ClOffset offset2;
         Clause& cl = *solver->cl_alloc.ptr(offset);
         #ifdef USE_GAUSS
-        if (cl.used_in_xor()) {
+        if (cl.used_in_xor() &&
+            solver->conf.force_preserve_xors
+        ) {
+            offset2 = offset;
+            goto copy;
+        }
+        #endif
+        #ifdef FINAL_PREDICTOR
+        if (cl.red() && !cl.stats.locked_long) {
             offset2 = offset;
             goto copy;
         }
@@ -151,7 +157,7 @@ bool DistillerLong::go_through_clauses(
         maxNumProps -= 5;
 
         //If we already tried this clause, then move to next
-        if (cl.getdistilled()) {
+        if (cl.getdistilled() || cl._xor_is_detached) {
             *j++ = *i;
             continue;
         }
@@ -166,7 +172,7 @@ bool DistillerLong::go_through_clauses(
         maxNumProps -= cl.size();
         if (solver->satisfied_cl(cl)) {
             solver->detachClause(cl);
-            solver->cl_alloc.clauseFree(&cl);
+            solver->free_cl(&cl);
             continue;
         }
 
@@ -177,7 +183,7 @@ bool DistillerLong::go_through_clauses(
             , cl.stats
         );
 
-        #ifdef USE_GAUSS
+        #if defined(FINAL_PREDICTOR) || defined(USE_GAUSS)
         copy:
         #endif
         if (offset2 != CL_OFFSET_MAX) {
@@ -342,7 +348,7 @@ bool DistillerLong::distill_long_cls_all(
 
         //Detach and free old clause
         solver->detachClause(offset);
-        solver->cl_alloc.clauseFree(offset);
+        solver->free_cl(offset);
 
         if (cl2 != NULL) {
             cl2->set_distilled(true);
@@ -465,7 +471,7 @@ ClOffset DistillerLong::try_distill_clause_and_return_new(
         lits.resize(cl.size());
         std::copy(cl.begin(), cl.end(), lits.begin());
     }
-    solver->cl_alloc.clauseFree(offset);
+    solver->free_cl(offset);
     Clause *cl2 = solver->add_clause_int(lits, red, stats);
     (*solver->drat) << findelay;
 

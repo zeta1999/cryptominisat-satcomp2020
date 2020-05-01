@@ -58,6 +58,7 @@ enum class PolarityMode {
     , polarmode_neg
     , polarmode_rnd
     , polarmode_automatic
+    , polarmode_weighted
 };
 
 enum class Restart {
@@ -111,19 +112,19 @@ class GaussConf
     public:
 
     GaussConf() :
-        decision_until(700)
-        , autodisable(true)
+        autodisable(true)
+        , min_usefulness_cutoff(0.2)
         , max_matrix_rows(5000)
-        , min_matrix_rows(2)
-        , max_num_matrixes(5)
+        , min_matrix_rows(3)
+        , max_num_matrices(5)
     {
     }
 
-    uint32_t decision_until; //do Gauss until this level
     bool autodisable;
+    double min_usefulness_cutoff;
     uint32_t max_matrix_rows; //The maximum matrix size -- no. of rows
     uint32_t min_matrix_rows; //The minimum matrix size -- no. of rows
-    uint32_t max_num_matrixes; //Maximum number of matrixes
+    uint32_t max_num_matrices; //Maximum number of matrices
 
     //Matrix extraction config
     bool doMatrixFind = true;
@@ -148,15 +149,11 @@ class DLL_PUBLIC SolverConf
             const double time_used
         ) const;
 
-        //Variable activities
-        double  var_inc_vsids_start;
-        double  var_decay_vsids_start;
-        double  var_decay_vsids_max;
-        double random_var_freq;
-        int alternate_vsids;
-        double alternate_vsids_decay_rate1;
-        double alternate_vsids_decay_rate2;
+        //Variable polarities
+        bool do_lucky_polar;
         PolarityMode polarity_mode;
+        int polar_stable_every_n;
+        int chronophase_every_n;
 
         //Clause cleaning
 
@@ -169,6 +166,10 @@ class DLL_PUBLIC SolverConf
         //Otherwise we geometrically keep around max_temp_lev2_learnt_clauses*(inc**N)
         unsigned every_lev2_reduce;
 
+        #if defined(FINAL_PREDICTOR) || defined(STATS_NEEDED)
+        unsigned every_lev3_reduce;
+        #endif
+
         uint32_t must_touch_lev1_within;
         unsigned  max_temp_lev2_learnt_clauses;
         double    inc_max_temp_lev2_red_cls;
@@ -177,26 +178,17 @@ class DLL_PUBLIC SolverConf
         unsigned glue_put_lev0_if_below_or_eq;
         unsigned glue_put_lev1_if_below_or_eq;
         double    ratio_keep_clauses[2]; ///< Remove this ratio of clauses at every database reduction round
-
         double    clause_decay;
 
         //If too many (in percentage) low glues after min_num_confl_adjust_glue_cutoff, adjust glue lower
         double   adjust_glue_if_too_many_low;
         uint64_t min_num_confl_adjust_glue_cutoff;
 
-        //maple
-        int      maple;
-        unsigned modulo_maple_iter;
-        bool     more_maple_bump_high_glue;
-        int      alternate_maple;
-        double   alternate_maple_decay_rate1;
-        double   alternate_maple_decay_rate2;
-
         //For restarting
         unsigned    restart_first;      ///<The initial restart limit.                                                                (default 100)
         double    restart_inc;        ///<The factor with which the restart limit is multiplied in each restart.                    (default 1.5)
         Restart  restartType;   ///<If set, the solver will always choose the given restart strategy
-        int       do_blocking_restart;
+        int      do_blocking_restart;
         unsigned blocking_restart_trail_hist_length;
         double   blocking_restart_multip;
 
@@ -204,9 +196,10 @@ class DLL_PUBLIC SolverConf
         unsigned  shortTermHistorySize; ///< Rolling avg. glue window size
         unsigned lower_bound_for_blocking_restart;
         double   ratio_glue_geom; //higher the number, the more glue will be done. 2 is 2x glue 1x geom
-        int more_more_with_cache;
-        int more_more_with_stamp;
         int doAlwaysFMinim;
+
+        //Branch strategy
+        string branch_strategy_setup;
 
         //Clause minimisation
         int doRecursiveMinim;
@@ -214,12 +207,13 @@ class DLL_PUBLIC SolverConf
         int doMinimRedMoreMore;
         unsigned max_glue_more_minim;
         unsigned max_size_more_minim;
-        unsigned more_red_minim_limit_cache;
         unsigned more_red_minim_limit_binary;
         unsigned max_num_lits_more_more_red_min;
 
         //Verbosity
-        int  verbosity;  ///<Verbosity level. 0=silent, 1=some progress report, 2=lots of report, 3 = all report       (default 2)
+        int  verbosity;  ///<Verbosity level 0-2: normal  3+ extreme
+        int  xor_detach_verb; ///to debug XOR detach issues
+
         int  doPrintGateDot; ///< Print DOT file of gates
         int  print_full_restart_stat;
         int  print_all_restarts;
@@ -233,13 +227,10 @@ class DLL_PUBLIC SolverConf
 
         //Glues
         int       update_glues_on_analyze;
-
-        //OTF stuff
-        int       otfHyperbin;
+        uint32_t  max_glue_cutoff_gluehistltlimited;
 
         //chrono bt
         int diff_declev_for_chrono;
-
 
         //decision-based conflict clause generation
         int       do_decision_based_cl;
@@ -249,6 +240,8 @@ class DLL_PUBLIC SolverConf
         //SQL
         bool      dump_individual_restarts_and_clauses;
         double    dump_individual_cldata_ratio;
+        int       sql_overwrite_file;
+        double    lock_for_data_gen_ratio;
 
         //Steps
         double orig_step_size = 0.40;
@@ -259,6 +252,7 @@ class DLL_PUBLIC SolverConf
         int      doVarElim;          ///<Perform variable elimination
         uint64_t varelim_cutoff_too_many_clauses;
         int      do_empty_varelim;
+        int      do_full_varelim;
         long long empty_varelim_time_limitM;
         long long varelim_time_limitM;
         long long varelim_sub_str_limit;
@@ -278,6 +272,22 @@ class DLL_PUBLIC SolverConf
         long long ternary_res_time_limitM;
         double ternary_keep_mult;
         double ternary_max_create;
+        int    allow_ternary_bin_create;
+
+        //Bosphorus
+        int do_bosphorus;
+        uint32_t bosphorus_every_n;
+
+        //BreakID
+        bool doBreakid;
+        bool breakid_use_assump; ///< If false breaks library use of solver
+        uint32_t breakid_every_n;
+        uint32_t breakid_vars_limit_K;
+        uint64_t breakid_cls_limit_K;
+        uint64_t breakid_lits_limit_K;
+        int64_t breakid_time_limit_K;
+        int breakid_max_constr_per_permut;
+        bool breakid_matrix_detect;
 
         //BVA
         int      do_bva;
@@ -289,34 +299,34 @@ class DLL_PUBLIC SolverConf
         uint32_t  bva_every_n;
 
         //Probing
-        int      doProbe;
         int      doIntreeProbe;
-        unsigned long long   probe_bogoprops_time_limitM;
+        int      doTransRed;   ///<carry out transitive reduction
         unsigned long long   intree_time_limitM;
         unsigned long long intree_scc_varreplace_time_limitM;
-        int      doBothProp;
-        int      doTransRed;   ///<Should carry out transitive reduction
-        int      doStamp;
-        int      doCache;
-        unsigned   cacheUpdateCutoff;
-        unsigned   maxCacheSizeMB;
-        unsigned long long otf_hyper_time_limitM;
-        double  otf_hyper_ratio_limit;
-        double single_probe_time_limit_perc;
+        int       do_hyperbin_and_transred;
 
         //XORs
         int      doFindXors;
         unsigned maxXorToFind;
         unsigned maxXorToFindSlow;
-        int      useCacheWhenFindingXors;
         uint64_t maxXORMatrix;
         uint64_t xor_finder_time_limitM;
         int      allow_elim_xor_vars;
         unsigned xor_var_per_cut;
+        int      force_preserve_xors;
+
+        //Cardinality
+        int      doFindCard;
+
+        #ifdef FINAL_PREDICTOR
+        //Predictor system
+        std::string pred_conf_short;
+        std::string pred_conf_long;
+        float pred_keep_above;
+        #endif
 
         //Var-replacement
         int doFindAndReplaceEqLits;
-        int doExtendedSCC;
         int max_scc_depth;
 
         //Iterative Alo Scheduling
@@ -349,13 +359,15 @@ class DLL_PUBLIC SolverConf
         uint32_t sls_memoutMB;
         uint32_t walksat_max_runs;
         int      sls_get_phase;
+        int      sls_ccnr_asipire;
         string   which_sls;
         uint32_t sls_how_many_to_bump;
+        uint32_t sls_bump_var_max_n_times;
 
         //Distillation
         int      do_distill_clauses;
         unsigned long long distill_long_cls_time_limitM;
-        long watch_cache_stamp_based_str_time_limitM;
+        long watch_based_str_time_limitM;
         long long distill_time_limitM;
         double distill_increase_conf_ratio;
         long distill_min_confl;
@@ -366,7 +378,6 @@ class DLL_PUBLIC SolverConf
         int       must_renumber; ///< if set, all "renumber" is treated as a "must-renumber"
         int       doSaveMem;
         uint64_t  full_watch_consolidate_every_n_confl;
-        int       static_mem_consolidate_order;
 
         //Component handling
         int       doCompHandler;
@@ -392,9 +403,11 @@ class DLL_PUBLIC SolverConf
 
         //Gauss
         GaussConf gaussconf;
+        bool doM4RI;
+        bool xor_detach_reattach;
+        bool force_use_all_matrixes;
 
-        //Greedy undef
-        int      greedy_undef;
+        //Sampling
         std::vector<uint32_t>* sampling_vars;
 
         //Timeouts
@@ -404,14 +417,17 @@ class DLL_PUBLIC SolverConf
         double global_multiplier_multiplier_max;
         double var_and_mem_out_mult;
 
+        //Multi-thread, MPI
+        unsigned long long sync_every_confl;
+        unsigned thread_num;
+
         //Misc
         unsigned origSeed;
-        unsigned long long sync_every_confl;
         unsigned reconfigure_val;
         unsigned reconfigure_at;
         unsigned preprocess;
         int      simulate_drat;
-        int      need_decisions_reaching;
+        int      conf_needed = true;
         std::string simplified_cnf;
         std::string solution_file;
         std::string saved_state_file;
