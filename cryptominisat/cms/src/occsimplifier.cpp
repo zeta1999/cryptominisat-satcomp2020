@@ -1639,7 +1639,6 @@ bool OccSimplifier::perform_ternary(Clause* cl, ClOffset offs)
             assert(newCl->stats.which_red_array == 1);
             assert(newCl->stats.glue == solver->conf.glue_put_lev1_if_below_or_eq);
             #ifdef STATS_NEEDED
-            bool to_dump = false;
             double myrnd = solver->mtrand.randDblExc();
             if (myrnd <= solver->conf.dump_individual_cldata_ratio) {
                 newCl->stats.ID = solver->clauseID++;
@@ -2456,9 +2455,7 @@ int OccSimplifier::test_elim_and_fill_resolvents(const uint32_t var)
             //Calculate new clause stats
             ClauseStats stats;
             bool is_xor = false;
-            #ifndef STATS_NEEDED
             if (solver->conf.force_preserve_xors) {
-            #endif
                 if (it->isBin() && it2->isClause()) {
                     Clause* c = solver->cl_alloc.ptr(it2->get_offset());
                     stats = c->stats;
@@ -2474,9 +2471,7 @@ int OccSimplifier::test_elim_and_fill_resolvents(const uint32_t var)
                     is_xor |= c1->used_in_xor();
                     is_xor |= c2->used_in_xor();
                 }
-            #ifndef STATS_NEEDED
             }
-            #endif
             //must clear marking that has been set due to gate
             stats.marked_clause = 0;
             resolvents.add_resolvent(dummy, stats, is_xor);

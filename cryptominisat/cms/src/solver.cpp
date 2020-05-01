@@ -67,6 +67,7 @@ THE SOFTWARE.
 #include "cardfinder.h"
 #include "sls.h"
 #include "matrixfinder.h"
+#include "lucky.h"
 
 #ifdef USE_BREAKID
 #include "cms_breakid.h"
@@ -1995,8 +1996,8 @@ lbool Solver::execute_inprocess_strategy(
         assert(watches.get_smudged_list().empty());
         assert(prop_at_head());
         assert(okay());
-        check_wrong_attach();
         #ifdef SLOW_DEBUG
+        check_wrong_attach();
         check_stats();
         check_no_duplicate_lits_anywhere();
         check_assumptions_sanity();
@@ -2078,7 +2079,14 @@ lbool Solver::execute_inprocess_strategy(
                 SLS sls(this);
                 const lbool ret = sls.run(solveStats.num_simplify);
                 if (ret == l_True) {
-                    return l_True;
+                    return l_Undef;
+                }
+            }
+        } else if (token == "lucky") {
+            if (conf.do_lucky_polar) {
+                Lucky lucky(solver);
+                if (lucky.doit()) {
+                    return l_Undef;
                 }
             }
         } else if (token == "intree-probe") {
@@ -2211,6 +2219,7 @@ lbool Solver::simplify_problem(const bool startup)
             ret = execute_inprocess_strategy(startup, conf.simplify_schedule_nonstartup);
         }
     }
+    assert(ret != l_True);
 
     //Free unused watch memory
     free_unused_watches();
@@ -2231,38 +2240,25 @@ lbool Solver::simplify_problem(const bool startup)
     solveStats.num_simplify_this_solve_call++;
 
     assert(!(ok == false && ret != l_False));
-    if (!ok || ret == l_False) {
+    if (ret == l_False) {
         return l_False;
-    } else if (ret == l_Undef) {
-        check_stats();
-        check_implicit_propagated();
-        //NOTE:
-        // we have to rebuild HERE, or we'd rebuild every time solve()
-        // is called, which is called form the outside, sometimes 1000x
-        // in one second
-        rebuildOrderHeap();
-        #ifdef DEBUG_ATTACH_MORE
-        find_all_attach();
-        test_all_clause_attached();
-        #endif
-        check_wrong_attach();
-
-        return ret;
-    } else {
-        assert(ret == l_True);
-        //nothing should happen here, we already have a full solution
-        //but let's check and put the propagation to HEAD
-        PropBy confl = propagate<false>();
-        assert(confl.isNULL());
-
-        finish_up_solve(ret);
-        //NOTE:
-        // we have to rebuild HERE, or we'd rebuild every time solve()
-        // is called, which is called form the outside, sometimes 1000x
-        // in one second
-        rebuildOrderHeap();
-        return ret;
     }
+
+    assert(ret == l_Undef);
+    check_stats();
+    check_implicit_propagated();
+    //NOTE:
+    // we have to rebuild HERE, or we'd rebuild every time solve()
+    // is called, which is called form the outside, sometimes 1000x
+    // in one second
+    rebuildOrderHeap();
+    #ifdef DEBUG_ATTACH_MORE
+    find_all_attach();
+    test_all_clause_attached();
+    #endif
+    check_wrong_attach();
+
+    return ret;
 }
 
 void CMSat::Solver::print_stats(const double cpu_time, const double cpu_time_total) const
@@ -4283,7 +4279,7 @@ bool Solver::implied_by(const std::vector<Lit>& lits,
             enqueue<false>(p);
         }
         if (value(p) == l_False) {
-            cancelUntil(0);
+            cancelUntil<false, true>(0);
             return false;
         }
     }
@@ -4292,10 +4288,10 @@ bool Solver::implied_by(const std::vector<Lit>& lits,
         return true;
     }
 
-    PropBy x = propagate<false>();
+    PropBy x = propagate<true>();
     if (!x.isNULL()) {
         //UNSAT due to prop
-        cancelUntil(0);
+        cancelUntil<false, true>(0);
         return false;
     }
     //DO NOT add the "optimization" to return when nothing got propagated
@@ -4307,7 +4303,7 @@ bool Solver::implied_by(const std::vector<Lit>& lits,
             out_implied.push_back(trail[i].lit);
         }
     }
-    cancelUntil(0);
+    cancelUntil<false, true>(0);
 
     //Map to outer
     for(auto& l: out_implied) {

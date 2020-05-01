@@ -1,5 +1,6 @@
 /******************************************
-Copyright (c) 2016, Mate Soos
+Copyright (c) 2020, Mate Soos
+Originally from CaDiCaL's "lucky.cpp" by Armin Biere, 2019
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,50 +21,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ***********************************************/
 
-#ifndef __CLPREDICTOR_H__
-#define __CLPREDICTOR_H__
-
-#include <vector>
-#include <string>
-#include <xgboost/c_api.h>
-
-using std::vector;
+#ifndef LUCKY_PHASES_H_
+#define LUCKY_PHASES_H_
 
 namespace CMSat {
 
 class Solver;
-class Clause;
 
-class ClPredictors
+class Lucky
 {
 public:
-    ClPredictors();
-    ~ClPredictors();
-    void load_models(std::string short_fname, std::string long_fname);
-    float predict_short(const CMSat::Clause* cl
-                , const uint64_t sumConflicts
-                , const int64_t last_touched_diff
-                , const double   act_ranking_rel
-                , const uint32_t act_ranking_top_10);
+    Lucky(Solver* solver);
+    bool doit();
 
-    float predict_long(
-        const CMSat::Clause* cl,
-        const uint64_t sumConflicts,
-        const int64_t  last_touched_diff,
-        const double   act_ranking_rel,
-        const uint32_t act_ranking_top_10);
+//private:
+    bool check_all(bool polar);
+    bool search_fwd_sat(bool polar);
+    bool search_backw_sat(bool polar);
+    bool horn_sat(bool polar);
 
 private:
-    float predict_one(int num, DMatrixHandle dmat);
-    void set_up_input(
-        const CMSat::Clause* cl,
-        const uint64_t sumConflicts,
-        const int64_t  last_touched_diff,
-        const double   act_ranking_rel,
-        const uint32_t act_ranking_top_10,
-        float *train,
-        const uint32_t cols);
-    vector<BoosterHandle> handles;
+    bool enqueue_and_prop_assumptions();
+    Solver* solver;
 };
 
 }

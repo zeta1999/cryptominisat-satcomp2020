@@ -230,8 +230,10 @@ bool PropEngine::prop_long_cl_any_order(
         handle_normal_prop_fail(c, offset, confl);
         return false;
     } else {
-        #ifdef STATS_NEEDED
+        #if defined(STATS_NEEDED) || defined(FINAL_PREDICTOR)
         c.stats.propagations_made++;
+        #endif
+        #ifdef STATS_NEEDED
         if (c.red())
             propStats.propsLongRed++;
         else
@@ -641,7 +643,7 @@ void PropEngine::load_state(SimpleInFile& f)
     CNF::load_state(f);
 }
 
-#ifdef STATS_NEEDED
+#ifdef STATS_NEEDED_BRANCH
 void PropEngine::sql_dump_vardata_picktime(uint32_t v, PropBy from)
 {
     if (!solver->sqlStats)
